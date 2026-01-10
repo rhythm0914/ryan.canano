@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Code Defender | Mini Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Game-specific styles */
+        .game-container {
+            min-height: 100vh;
+            padding: 100px 20px 50px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .game-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .game-title {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .game-description {
+            color: var(--gray);
+            max-width: 600px;
+            margin: 0 auto 30px;
+        }
+        
+        .game-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 30px;
+        }
+        
+        @media (max-width: 992px) {
+            .game-wrapper {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .game-board {
+            background-color: var(--dark-light);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            min-height: 500px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .game-info {
+            background-color: var(--dark-light);
+            border-radius: var(--border-radius);
+            padding: 25px;
+        }
+        
+        .info-section {
+            margin-bottom: 30px;
+        }
+        
+        .info-title {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-box {
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .control-btn {
+            padding: 15px;
+            border-radius: var(--border-radius);
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .control-btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-3px);
+        }
+        
+        .control-btn.secondary {
+            background-color: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .control-btn.secondary:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .game-object {
+            position: absolute;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            user-select: none;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        
+        .game-object:hover {
+            transform: scale(1.1);
+        }
+        
+        .bug {
+            background: linear-gradient(45deg, #FF416C, #FF4B2B);
+            color: white;
+            box-shadow: 0 5px 15px rgba(255, 65, 108, 0.4);
+        }
+        
+        .code {
+            background: linear-gradient(45deg, #2193b0, #6dd5ed);
+            color: white;
+            box-shadow: 0 5px 15px rgba(33, 147, 176, 0.4);
+        }
+        
+        .game-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            z-index: 10;
+            width: 80%;
+            max-width: 400px;
+            display: none;
+        }
+        
+        .game-message.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        .message-title {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+        
+        .game-instructions {
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-top: 20px;
+        }
+        
+        .instructions-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        
+        .instructions-list li {
+            margin-bottom: 10px;
+            padding-left: 25px;
+            position: relative;
+        }
+        
+        .instructions-list li:before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
+        
+        .back-to-portfolio {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 30px;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        
+        .back-to-portfolio:hover {
+            color: white;
+            transform: translateX(-5px);
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="main-nav">
+    <div class="nav-container">
+        <div class="nav-logo">
+            <a href="index.html"><span class="logo-text">AM</span> Portfolio</a>
+        </div>
+        <div class="nav-links">
+            <a href="index.html#home">Home</a>
+            <a href="index.html#projects">Portfolio</a>
+            <a href="index.html">Back to Site</a>
+        </div>
+    </div>
+</nav>
+
+<!-- Game Container -->
+<div class="game-container">
+    <div class="game-header">
+        <h1 class="game-title">Code <span class="accent">Defender</span></h1>
+        <p class="game-description">Defend your code from bugs! Click on bugs to eliminate them, but avoid clicking on actual code snippets.</p>
+        <a href="index.html" class="back-to-portfolio">
+            <i class="fas fa-arrow-left"></i> Back to Portfolio
+        </a>
+    </div>
+    
+    <div class="game-wrapper">
+        <div class="game-board" id="gameBoard">
+            <div class="game-message" id="gameMessage">
+                <h2 class="message-title" id="messageTitle">Game Over</h2>
+                <p id="messageText">Your final score: <span id="finalScore">0</span></p>
+                <button class="control-btn" id="restartBtn">
+                    <i class="fas fa-redo"></i> Play Again
+                </button>
+            </div>
+        </div>
+        
+        <div class="game-info">
+            <div class="info-section">
+                <h3 class="info-title">Game Stats</h3>
+                <div class="stats">
+                    <div class="stat-box">
+                        <span class="stat-value" id="score">0</span>
+                        <span class="stat-label">Score</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-value" id="time">60</span>
+                        <span class="stat-label">Time Left</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-value" id="bugs">0</span>
+                        <span class="stat-label">Bugs Destroyed</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-value" id="level">1</span>
+                        <span class="stat-label">Level</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h3 class="info-title">Controls</h3>
+                <div class="controls">
+                    <button class="control-btn" id="startBtn">
+                        <i class="fas fa-play"></i> Start Game
+                    </button>
+                    <button class="control-btn secondary" id="pauseBtn">
+                        <i class="fas fa-pause"></i> Pause Game
+                    </button>
+                    <button class="control-btn secondary" id="instructionsBtn">
+                        <i class="fas fa-info-circle"></i> How to Play
+                    </button>
+                </div>
+            </div>
+            
+            <div class="game-instructions" id="instructionsPanel">
+                <h3 class="info-title">How to Play</h3>
+                <ul class="instructions-list">
+                    <li>Click on bugs to destroy them and earn points</li>
+                    <li>Avoid clicking on code snippets (blue circles)</li>
+                    <li>Each bug destroyed gives you +10 points</li>
+                    <li>Each code snippet clicked costs you -20 points</li>
+                    <li>Game gets faster with each level</li>
+                    <li>Survive as long as possible to get a high score!</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="footer-content">
+        <div class="footer-logo">
+            <a href="index.html"><span class="logo-text">AM</span> Portfolio</a>
+            <p>Building the future with code, one line at a time.</p>
+        </div>
+        <div class="footer-links">
+            <h3>Quick Links</h3>
+            <a href="index.html#home">Home</a>
+            <a href="index.html#about">About</a>
+            <a href="index.html#projects">Projects</a>
+        </div>
+        <div class="footer-social">
+            <h3>Connect With Me</h3>
+            <div class="social-icons">
+                <a href="#"><i class="fab fa-linkedin"></i></a>
+                <a href="#"><i class="fab fa-github"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+            </div>
+            <a href="index.html" class="game-link">
+                <i class="fas fa-arrow-left"></i> Back to Portfolio
+            </a>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p>&copy; <span id="currentYear">2024</span> Alex Morgan. All Rights Reserved.</p>
+        <p>Made with <i class="fas fa-heart"></i> and <i class="fas fa-code"></i></p>
+    </div>
+</footer>
+
+<script src="game.js"></script>
+</body>
+</html>
