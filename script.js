@@ -233,3 +233,36 @@ document.addEventListener('DOMContentLoaded', function() {
     //     typeWriter(heroTitle, originalText, 80);
     // });
 });
+// Add this to your existing script.js file
+
+// Experience section animation on scroll
+const experienceObserver = () => {
+    const timelineItems = document.querySelectorAll('.timeline-item');
+    const certCards = document.querySelectorAll('.cert-card');
+    
+    const observerOptions = {
+        threshold: 0.2,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, observerOptions);
+    
+    timelineItems.forEach(item => observer.observe(item));
+    certCards.forEach(card => observer.observe(card));
+};
+
+// Call this function when the DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Your existing code...
+    
+    // Add experience section observer
+    experienceObserver();
+    
+    // Your existing code...
+});
