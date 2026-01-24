@@ -14,7 +14,7 @@ A fully-featured, interactive portfolio website showcasing IT skills, projects, 
 </p>
 
 ## ✨ Live Demo
-🔗 **[View Live Portfolio](https://rhythm0914.github.io/portfolio/)** *[Update with your link]*
+🔗 **[View Live Portfolio](https://rhythm0914.github.io/ryan.canano/)** *[Update with your link]*
 
 ## 📸 Preview
 
