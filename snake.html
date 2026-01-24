@@ -297,18 +297,22 @@
 
             // Touch support for better mobile experience
             btnUp.addEventListener('touchstart', (e) => {
+                e.preventDefault();
                 if (running && direction !== 'DOWN') nextDirection = 'UP';
             });
 
             btnDown.addEventListener('touchstart', (e) => {
+                e.preventDefault();
                 if (running && direction !== 'UP') nextDirection = 'DOWN';
             });
 
             btnLeft.addEventListener('touchstart', (e) => {
+                e.preventDefault();
                 if (running && direction !== 'RIGHT') nextDirection = 'LEFT';
             });
 
             btnRight.addEventListener('touchstart', (e) => {
+                e.preventDefault();
                 if (running && direction !== 'LEFT') nextDirection = 'RIGHT';
             });
         }
@@ -392,6 +396,14 @@
             ctx.fillStyle = '#9bbc0f';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+            // Draw grid (optional)
+            ctx.strokeStyle = 'rgba(15, 56, 15, 0.1)';
+            for (let x = 0; x < GRID_WIDTH; x++) {
+                for (let y = 0; y < GRID_HEIGHT; y++) {
+                    ctx.strokeRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                }
+            }
+
             // Draw food
             ctx.fillStyle = '#306230';
             ctx.fillRect(
@@ -410,6 +422,50 @@
                     TILE_SIZE,
                     TILE_SIZE
                 );
+                
+                // Draw snake eyes on head
+                if (index === 0) {
+                    ctx.fillStyle = '#9bbc0f';
+                    const eyeSize = TILE_SIZE / 5;
+                    
+                    // Calculate eye positions based on direction
+                    let eye1X, eye1Y, eye2X, eye2Y;
+                    
+                    switch(direction) {
+                        case 'UP':
+                            eye1X = segment.x * TILE_SIZE + TILE_SIZE/3;
+                            eye1Y = segment.y * TILE_SIZE + TILE_SIZE/3;
+                            eye2X = segment.x * TILE_SIZE + 2*TILE_SIZE/3;
+                            eye2Y = segment.y * TILE_SIZE + TILE_SIZE/3;
+                            break;
+                        case 'DOWN':
+                            eye1X = segment.x * TILE_SIZE + TILE_SIZE/3;
+                            eye1Y = segment.y * TILE_SIZE + 2*TILE_SIZE/3;
+                            eye2X = segment.x * TILE_SIZE + 2*TILE_SIZE/3;
+                            eye2Y = segment.y * TILE_SIZE + 2*TILE_SIZE/3;
+                            break;
+                        case 'LEFT':
+                            eye1X = segment.x * TILE_SIZE + TILE_SIZE/3;
+                            eye1Y = segment.y * TILE_SIZE + TILE_SIZE/3;
+                            eye2X = segment.x * TILE_SIZE + TILE_SIZE/3;
+                            eye2Y = segment.y * TILE_SIZE + 2*TILE_SIZE/3;
+                            break;
+                        case 'RIGHT':
+                            eye1X = segment.x * TILE_SIZE + 2*TILE_SIZE/3;
+                            eye1Y = segment.y * TILE_SIZE + TILE_SIZE/3;
+                            eye2X = segment.x * TILE_SIZE + 2*TILE_SIZE/3;
+                            eye2Y = segment.y * TILE_SIZE + 2*TILE_SIZE/3;
+                            break;
+                    }
+                    
+                    ctx.beginPath();
+                    ctx.arc(eye1X - eyeSize/2, eye1Y - eyeSize/2, eyeSize, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.beginPath();
+                    ctx.arc(eye2X - eyeSize/2, eye2Y - eyeSize/2, eyeSize, 0, Math.PI * 2);
+                    ctx.fill();
+                }
             });
         }
 

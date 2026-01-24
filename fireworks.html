@@ -5,50 +5,178 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fireworks Screensaver</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
             overflow: hidden;
             background: #000;
+            font-family: Arial, sans-serif;
         }
+        
         canvas {
             display: block;
+        }
+        
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 300px;
+        }
+        
+        .controls h3 {
+            margin-bottom: 10px;
+            color: #ff9900;
+        }
+        
+        .controls label {
+            display: block;
+            margin: 8px 0 4px;
+            font-size: 0.9em;
+            color: #ccc;
+        }
+        
+        .controls input[type="range"] {
+            width: 100%;
+            margin: 5px 0;
+        }
+        
+        .control-value {
+            font-size: 0.8em;
+            color: #ff9900;
+            text-align: center;
+        }
+        
+        .info {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.8em;
+            text-align: right;
+            z-index: 100;
+        }
+        
+        @media (max-width: 768px) {
+            .controls {
+                top: 10px;
+                left: 10px;
+                right: 10px;
+                max-width: none;
+            }
+            
+            .info {
+                bottom: 10px;
+                right: 10px;
+                left: 10px;
+                text-align: center;
+            }
         }
     </style>
 </head>
 <body>
     <canvas id="canvas"></canvas>
+    
+    <div class="controls">
+        <h3>🎆 Fireworks Controls</h3>
+        
+        <label for="fireworkRate">Firework Frequency:</label>
+        <input type="range" id="fireworkRate" min="100" max="2000" value="500" step="100">
+        <div class="control-value" id="rateValue">500ms</div>
+        
+        <label for="particleCount">Particle Count:</label>
+        <input type="range" id="particleCount" min="50" max="300" value="150" step="10">
+        <div class="control-value" id="countValue">150 particles</div>
+        
+        <label for="gravity">Gravity:</label>
+        <input type="range" id="gravity" min="0" max="0.2" value="0.05" step="0.01">
+        <div class="control-value" id="gravityValue">0.05</div>
+        
+        <div style="margin-top: 15px; font-size: 0.8em; color: #888;">
+            Click/tap to create fireworks
+        </div>
+    </div>
+    
+    <div class="info">
+        Interactive Fireworks Screensaver<br>
+        Click anywhere to launch custom fireworks
+    </div>
+
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        // Get control elements
+        const fireworkRateSlider = document.getElementById('fireworkRate');
+        const particleCountSlider = document.getElementById('particleCount');
+        const gravitySlider = document.getElementById('gravity');
+        const rateValue = document.getElementById('rateValue');
+        const countValue = document.getElementById('countValue');
+        const gravityValue = document.getElementById('gravityValue');
         
-        window.addEventListener('resize', () => {
+        // Initialize canvas size
+        function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        // Update control value displays
+        fireworkRateSlider.addEventListener('input', function() {
+            rateValue.textContent = `${this.value}ms`;
+        });
+        
+        particleCountSlider.addEventListener('input', function() {
+            countValue.textContent = `${this.value} particles`;
+        });
+        
+        gravitySlider.addEventListener('input', function() {
+            gravityValue.textContent = parseFloat(this.value).toFixed(2);
         });
         
         class Particle {
-            constructor(x, y, color) {
+            constructor(x, y, color, custom = false) {
                 this.x = x;
                 this.y = y;
                 this.color = color;
                 this.velocity = {
-                    x: (Math.random() - 0.5) * 8,
-                    y: (Math.random() - 0.5) * 8
+                    x: (Math.random() - 0.5) * (custom ? 12 : 8),
+                    y: (Math.random() - 0.5) * (custom ? 12 : 8)
                 };
                 this.alpha = 1;
                 this.decay = Math.random() * 0.015 + 0.01;
-                this.gravity = 0.05;
-                this.size = Math.random() * 3 + 1;
+                this.gravity = parseFloat(gravitySlider.value);
+                this.size = Math.random() * (custom ? 4 : 3) + 1;
+                this.friction = 0.97;
+                this.custom = custom;
             }
             
             update() {
+                this.velocity.x *= this.friction;
+                this.velocity.y *= this.friction;
                 this.velocity.y += this.gravity;
                 this.x += this.velocity.x;
                 this.y += this.velocity.y;
                 this.alpha -= this.decay;
+                
+                // Add some randomness for natural movement
+                if (Math.random() < 0.1) {
+                    this.velocity.x += (Math.random() - 0.5) * 0.2;
+                    this.velocity.y += (Math.random() - 0.5) * 0.2;
+                }
             }
             
             draw() {
@@ -56,22 +184,63 @@
                 ctx.globalAlpha = this.alpha;
                 ctx.fillStyle = this.color;
                 ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                
+                // Draw different shapes for variety
+                if (Math.random() > 0.7 && this.custom) {
+                    // Draw star shape
+                    const spikes = 5;
+                    const outerRadius = this.size;
+                    const innerRadius = this.size / 2;
+                    
+                    let rot = Math.PI / 2 * 3;
+                    let x = this.x;
+                    let y = this.y;
+                    let step = Math.PI / spikes;
+                    
+                    ctx.moveTo(x, y - outerRadius);
+                    for (let i = 0; i < spikes; i++) {
+                        x = this.x + Math.cos(rot) * outerRadius;
+                        y = this.y + Math.sin(rot) * outerRadius;
+                        ctx.lineTo(x, y);
+                        rot += step;
+                        
+                        x = this.x + Math.cos(rot) * innerRadius;
+                        y = this.y + Math.sin(rot) * innerRadius;
+                        ctx.lineTo(x, y);
+                        rot += step;
+                    }
+                    ctx.lineTo(this.x, this.y - outerRadius);
+                    ctx.closePath();
+                } else {
+                    // Draw circle
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                }
+                
                 ctx.fill();
+                
+                // Add glow effect
+                if (this.custom) {
+                    ctx.shadowColor = this.color;
+                    ctx.shadowBlur = 15;
+                    ctx.fill();
+                }
+                
                 ctx.restore();
             }
         }
         
         class Firework {
-            constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = canvas.height;
-                this.targetY = Math.random() * canvas.height * 0.5 + 50;
+            constructor(x = null, y = null, custom = false) {
+                this.x = x !== null ? x : Math.random() * canvas.width;
+                this.y = y !== null ? y : canvas.height;
+                this.targetY = y !== null ? y - 100 : Math.random() * canvas.height * 0.5 + 50;
                 this.velocity = (this.y - this.targetY) / 60;
                 this.particles = [];
                 this.exploded = false;
-                this.color = `hsl(${Math.random() * 360}, 100%, 60%)`;
+                this.color = custom ? `hsl(${Math.random() * 360}, 100%, 60%)` : `hsl(${Math.random() * 360}, 100%, 60%)`;
                 this.trailParticles = [];
+                this.custom = custom;
+                this.size = custom ? 4 : 3;
             }
             
             update() {
@@ -84,7 +253,8 @@
                             x: this.x,
                             y: this.y,
                             alpha: 0.5,
-                            size: 2
+                            size: 2,
+                            color: this.color
                         });
                     }
                     
@@ -103,7 +273,8 @@
                 // Update trail
                 this.trailParticles.forEach((t, i) => {
                     t.alpha -= 0.02;
-                    if (t.alpha <= 0) {
+                    t.size -= 0.01;
+                    if (t.alpha <= 0 || t.size <= 0) {
                         this.trailParticles.splice(i, 1);
                     }
                 });
@@ -111,10 +282,21 @@
             
             explode() {
                 this.exploded = true;
-                const particleCount = Math.random() * 50 + 100;
+                const particleCount = this.custom ? 
+                    parseInt(particleCountSlider.value) * 1.5 : 
+                    parseInt(particleCountSlider.value);
                 
                 for (let i = 0; i < particleCount; i++) {
-                    this.particles.push(new Particle(this.x, this.y, this.color));
+                    this.particles.push(new Particle(this.x, this.y, this.color, this.custom));
+                }
+                
+                // Play explosion sound (in a real game)
+                if (this.custom && typeof Audio !== 'undefined') {
+                    try {
+                        const audio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==');
+                        audio.volume = 0.1;
+                        audio.play().catch(() => {});
+                    } catch (e) {}
                 }
             }
             
@@ -124,7 +306,7 @@
                     this.trailParticles.forEach(t => {
                         ctx.save();
                         ctx.globalAlpha = t.alpha;
-                        ctx.fillStyle = this.color;
+                        ctx.fillStyle = t.color;
                         ctx.beginPath();
                         ctx.arc(t.x, t.y, t.size, 0, Math.PI * 2);
                         ctx.fill();
@@ -132,10 +314,14 @@
                     });
                     
                     // Draw rocket
+                    ctx.save();
                     ctx.fillStyle = this.color;
+                    ctx.shadowColor = this.color;
+                    ctx.shadowBlur = 10;
                     ctx.beginPath();
-                    ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
                     ctx.fill();
+                    ctx.restore();
                 } else {
                     this.particles.forEach(p => p.draw());
                 }
@@ -148,15 +334,63 @@
         
         const fireworks = [];
         let lastFireworkTime = 0;
+        let mouseX = 0;
+        let mouseY = 0;
+        let mousePressed = false;
+        
+        // Mouse/touch interaction
+        canvas.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+        
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            mouseX = touch.clientX;
+            mouseY = touch.clientY;
+        }, { passive: false });
+        
+        canvas.addEventListener('mousedown', () => {
+            mousePressed = true;
+            createCustomFirework(mouseX, mouseY);
+        });
+        
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            mousePressed = true;
+            const touch = e.touches[0];
+            createCustomFirework(touch.clientX, touch.clientY);
+        }, { passive: false });
+        
+        canvas.addEventListener('mouseup', () => {
+            mousePressed = false;
+        });
+        
+        canvas.addEventListener('touchend', () => {
+            mousePressed = false;
+        });
+        
+        function createCustomFirework(x, y) {
+            fireworks.push(new Firework(x, y, true));
+        }
         
         function animate(currentTime) {
+            // Create fading trail effect
             ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Launch new fireworks
-            if (currentTime - lastFireworkTime > Math.random() * 500 + 500) {
+            // Launch automatic fireworks
+            const rate = parseInt(fireworkRateSlider.value);
+            if (currentTime - lastFireworkTime > Math.random() * rate + rate) {
                 fireworks.push(new Firework());
                 lastFireworkTime = currentTime;
+            }
+            
+            // Create custom fireworks while mouse is pressed
+            if (mousePressed && Math.random() < 0.3) {
+                createCustomFirework(mouseX + (Math.random() - 0.5) * 50, 
+                                   mouseY + (Math.random() - 0.5) * 50);
             }
             
             // Update and draw fireworks
@@ -169,10 +403,25 @@
                 }
             });
             
+            // Draw instructions text
+            ctx.save();
+            ctx.globalAlpha = 0.3;
+            ctx.fillStyle = 'white';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Click or tap to create fireworks', canvas.width / 2, canvas.height - 30);
+            ctx.restore();
+            
             requestAnimationFrame(animate);
         }
         
+        // Start animation
         animate(0);
+        
+        // Prevent context menu on right-click
+        canvas.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+        });
     </script>
 </body>
 </html>
